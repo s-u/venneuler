@@ -42,18 +42,18 @@ venneuler <- function(combinations, weights, ...) {
 }
 
 ## Note: in col.fn we need more croma and less luminance than usual, because we'll be plotting with reduced alpha
-plot.VennDiagram <- function(vd, col, col.fn = function(col) hcl(col * 360, 130, 60), alpha=0.3, main=NULL, edges=200, border=NA, col.txt=1, ...) {
+plot.VennDiagram <- function(x, col, col.fn = function(col) hcl(col * 360, 130, 60), alpha=0.3, main=NULL, edges=200, border=NA, col.txt=1, ...) {
   # calculate total extents
-  xtp <- vd$centers + vd$diameters
-  xtm <- vd$centers - vd$diameters
+  xtp <- x$centers + x$diameters
+  xtm <- x$centers - x$diameters
   xr <- range(c(xtp[,1], xtm[,1]))
   yr <- range(c(xtp[,2], xtm[,2]))
   # create canvas
   plot.new()
   plot.window(xr, yr, "", asp = 1)
   # adjust alpha for all colors if specified
-  n <- length(vd$diameters)
-  if (missing(col)) col <- col.fn(vd$colors)
+  n <- length(x$diameters)
+  if (missing(col)) col <- col.fn(x$colors)
   if (length(col) < n) col <- rep(col, length.out=n)
   if (!is.na(alpha)) {
     col <- col2rgb(col) / 255
@@ -66,9 +66,9 @@ plot.VennDiagram <- function(vd, col, col.fn = function(col) hcl(col * 360, 130,
   if (!is.null(border)) border <- rep(border, length.out=n)
   # plot all circles
   for (i in seq.int(n))
-    polygon(vd$centers[i, 1] +  vd$diameters[i] * sx, vd$centers[i, 2] + vd$diameters[i] * sy, col = col[i], border = border[i])
+    polygon(x$centers[i, 1] +  x$diameters[i] * sx, x$centers[i, 2] + x$diameters[i] * sy, col = col[i], border = border[i])
   # if col.txt is not NA, plot the circle text
-  if (!all(is.na(col.txt))) text(vd$centers, vd$labels, col=col.txt)
+  if (!all(is.na(col.txt))) text(x$centers, x$labels, col=col.txt)
   # finish with title
   title(main = main, ...)
   invisible(NULL)
