@@ -85,7 +85,7 @@ public class VennAnalytic {
             }
             residualLabels[i - 1] = s;
         }
-        System.out.println("stress = " + stress + ", stress01 = " + stress01 + ", stress05 = " + stress05);
+        // System.out.println("stress = " + stress + ", stress01 = " + stress01 + ", stress05 = " + stress05);
 
         return new VennDiagram(centers, diameters, polyAreas, residuals, circleLabels, residualLabels, colors,
                 stress, stress01, stress05);
@@ -434,7 +434,7 @@ public class VennAnalytic {
                 worse++;
             }
             moveCenters(stepsize);
-            System.out.println("iteration, loss " + iter + " " + stress);
+            // System.out.println("iteration, loss " + iter + " " + stress);
             if (stress < minStress || worse > 50)
                 break;
         }
