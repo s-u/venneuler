@@ -16,8 +16,6 @@ package edu.uic.ncdm.venn;
 
 import edu.uic.ncdm.venn.data.VennData;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
@@ -211,38 +209,37 @@ public class VennAnalytic {
     private void renderVenn() {
         totalCount = 0;
         int size = 200;
-        BufferedImage[] bis = new BufferedImage[nCircles];
-        Graphics2D[] g2Ds = new Graphics2D[nCircles];
-        for (int i = 0; i < nCircles; i++) {
-            bis[i] = new BufferedImage(size, size, BufferedImage.TYPE_3BYTE_BGR);
-            g2Ds[i] = (Graphics2D) bis[i].getGraphics();
-        }
+        byte[][][] bis = new byte[nCircles][size][size];
         double mins = Double.POSITIVE_INFINITY;
         double maxs = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < centers.length; i++) {
-            double margin = diameters[i] / 2;
-            mins = Math.min(centers[i][0] - margin, mins);
-            mins = Math.min(centers[i][1] - margin, mins);
-            maxs = Math.max(centers[i][0] + margin, maxs);
-            maxs = Math.max(centers[i][1] + margin, maxs);
+        for (int i = 0; i < nCircles; i++) {
+            double radius = diameters[i] / 2;
+            mins = Math.min(centers[i][0] - radius, mins);
+            mins = Math.min(centers[i][1] - radius, mins);
+            maxs = Math.max(centers[i][0] + radius, maxs);
+            maxs = Math.max(centers[i][1] + radius, maxs);
         }
         for (int i = 0; i < nCircles; i++) {
-            g2Ds[i].setColor(Color.red);
             double xi = (centers[i][0] - mins) / (maxs - mins);
             double yi = (centers[i][1] - mins) / (maxs - mins);
-            double pi = diameters[i] / (maxs - mins);
-            int diameter = (int) (pi * size);
-            int x = (int) (xi * size);
-            int y = (int) (size - yi * size);
-            g2Ds[i].fillOval(x - diameter / 2, y - diameter / 2, diameter, diameter);
-        }
-        for (int y = 0; y < size; y++) {
+            double di = diameters[i] / (maxs - mins);
+            int r = (int) (di * size / 2.);
+            int r2 = r * r;
+            int cx = (int) (xi * size);
+            int cy = (int) (size - yi * size);
             for (int x = 0; x < size; x++) {
+                for (int y = 0; y < size; y++) {
+                    if ((x - cx) * (x - cx) + (y - cy) * (y - cy) < r2)
+                        bis[i][x][y] = 1;
+                }
+            }
+        }
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
                 int[] counts = new int[nCircles];
                 int count = 0;
                 for (int j = 0; j < nCircles; j++) {
-                    int pixel = bis[j].getRGB(x, y);
-                    if (pixel == Color.red.getRGB()) {
+                    if (bis[j][x][y] == 1) {
                         counts[j]++;
                         count++;
                     }
