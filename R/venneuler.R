@@ -44,8 +44,8 @@ venneuler <- function(combinations, weights, ...) {
 ## Note: in col.fn we need more croma and less luminance than usual, because we'll be plotting with reduced alpha
 plot.VennDiagram <- function(x, col, col.fn = function(col) hcl(col * 360, 130, 60), alpha=0.3, main=NULL, edges=200, border=NA, col.txt=1, ...) {
   # calculate total extents
-  xtp <- x$centers + x$diameters
-  xtm <- x$centers - x$diameters
+  xtp <- x$centers + x$diameters / 2
+  xtm <- x$centers - x$diameters / 2
   xr <- range(c(xtp[,1], xtm[,1]))
   yr <- range(c(xtp[,2], xtm[,2]))
   # create canvas
@@ -61,8 +61,8 @@ plot.VennDiagram <- function(x, col, col.fn = function(col) hcl(col * 360, 130, 
   }
   # prepare circle coordinates
   s <- seq.int(edges) / edges * 2 * pi
-  sx <- cos(s)
-  sy <- sin(s)
+  sx <- cos(s) / 2 # VD uses diameter, not radius
+  sy <- sin(s) / 2
   if (!is.null(border)) border <- rep(border, length.out=n)
   # plot all circles
   for (i in seq.int(n))

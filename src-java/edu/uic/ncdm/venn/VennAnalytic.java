@@ -41,27 +41,23 @@ public class VennAnalytic {
     private int totalCount;
 
     public VennAnalytic() {
-        minStress = .001;
+        minStress = .0001;
+        stress = 1.0;
     }
 
     public VennDiagram compute(VennData vd) {
         String[][] data = vd.data;
         double[] areas = vd.areas;
         boolean isAreas = vd.isAreas;
+
         if (isAreas)
             processAreaData(data, areas);
         else
             processElementData(data);
-        diameters = new double[nCircles];
-        double area;
-        for (int j = 0; j < nCircles; j++) {
-            if (isAreas)
-                area = circleData[j] / maxArea;
-            else
-                area = (double) circleData[j] / nTot;
-            diameters[j] = 2 * Math.sqrt(area / Math.PI / nCircles);
-        }
+
         computeInitialConfiguration();
+
+        scaleDiameters(isAreas);
 
         if (nCircles > 1)
             estimatePositions();
@@ -83,16 +79,13 @@ public class VennAnalytic {
         String[] residualLabels = new String[nPolygons - 1];
         for (int i = 1; i < nPolygons; i++) {
             residuals[i - 1] = polyAreas[i] - polyHats[i];
-            String st = Integer.toBinaryString(i);
-            char[] c = st.toCharArray();
-            int offset = nCircles - c.length;
+            char[] c = encode(i);
             String s = "";
             for (int j = 0; j < c.length; j++) {
                 if (c[j] == '1')
-                    s += circleLabels[j + offset];
+                    s += circleLabels[j];
             }
             residualLabels[i - 1] = s;
-//            System.out.println(s+" "+residuals[i-1]);
         }
         System.out.println("stress = " + stress + ", stress01 = " + stress01 + ", stress05 = " + stress05);
 
@@ -128,16 +121,16 @@ public class VennAnalytic {
         circleData = new double[nCircles];
         centers = new double[nCircles][2];
         for (int i = 0; i < nRows; i++) {
-            int[] elements = new int[nCircles];
+            int[] subsets = new int[nCircles];
             String[] s = data[i][0].split("~");
             for (int j = 0; j < s.length; j++) {
                 int jj = ((Double) sets.get(s[j])).intValue();
-                elements[jj] = 1;
+                subsets[jj] = 1;
             }
-            int k = decode(elements);
+            int k = decode(subsets);
             polyData[k] = areas[i];
             for (int j = 0; j < nCircles; j++) {
-                if (elements[j] > 0)
+                if (subsets[j] > 0)
                     circleData[j] += areas[i];
             }
         }
@@ -173,30 +166,41 @@ public class VennAnalytic {
         polyHats = new double[nPolygons];
         circleData = new double[nCircles];
         centers = new double[nCircles][2];
-        int[][] elements = new int[categories[0].size()][nCircles];
+        int[][] subsets = new int[categories[0].size()][nCircles];
         for (int i = 0; i < nRows; i++) {
             int i1 = ((Double) categories[0].get(data[i][0])).intValue();
             int j1 = ((Double) categories[1].get(data[i][1])).intValue();
-            elements[i1][j1]++;
+            subsets[i1][j1]++;
         }
-        for (int i = 0; i < elements.length; i++)
-            updateCounts(elements[i]);
+        for (int i = 0; i < subsets.length; i++)
+            updateCounts(subsets[i]);
     }
 
-    protected void updateCounts(int[] elements) {
-        int index = decode(elements);
+    protected void updateCounts(int[] counts) {
+        int index = decode(counts);
         polyData[index]++;
-        for (int j = 0; j < elements.length; j++) {
-            if (elements[j] > 0)
+        for (int j = 0; j < counts.length; j++) {
+            if (counts[j] > 0)
                 circleData[j]++;
         }
         nTot++;
     }
 
-    private int decode(int[] elements) {
+    private char[] encode(int index) {
+        String s = Integer.toBinaryString(index);
+        char[] c = s.toCharArray();
+        int offset = nCircles - c.length;
+        char[] result = new char[nCircles];
+        for (int i = 0; i < offset; i++)
+            result[i] = '0';
+        System.arraycopy(c, 0, result, offset, c.length);
+        return result;
+    }
+
+    private int decode(int[] subsets) {
         String b = "";
-        for (int j = 0; j < elements.length; j++) {
-            if (elements[j] > 0)
+        for (int j = 0; j < subsets.length; j++) {
+            if (subsets[j] > 0)
                 b += '1';
             else
                 b += '0';
@@ -308,17 +312,15 @@ public class VennAnalytic {
     private double[][] computeDistanceMatrix() {
         double[][] s = new double[nCircles][nCircles];
         for (int i = 0; i < nPolygons; i++) {
-            String st = Integer.toBinaryString(i);
-            char[] c = st.toCharArray();
-            int offset = nCircles - c.length;
+            char[] c = encode(i);
             for (int j = 0; j < c.length; j++) {
                 if (c[j] == '0')
                     continue;
                 for (int k = j + 1; k < c.length; k++) {
                     if (c[k] == '0')
                         continue;
-                    s[j + offset][k + offset] += polyData[i];
-                    s[k + offset][j + offset] = s[j + offset][k + offset];
+                    s[j][k] += polyData[i];
+                    s[k][j] = s[j][k];
                 }
             }
         }
@@ -375,7 +377,7 @@ public class VennAnalytic {
         }
     }
 
-    private void computeLoss() {
+    private double computeLoss() {
         /* regression through origin */
         double xx = 0;
         double xy = 0;
@@ -395,24 +397,41 @@ public class VennAnalytic {
             double x = polyData[i];
             double y = polyAreas[i];
             double yhat = x * slope;
-            sse += (y - yhat) * (y - yhat);
             polyHats[i] = yhat;
+            sse += (y - yhat) * (y - yhat);
         }
-        stress = sse / sst;
+        return sse / sst;
+    }
+
+    private void scaleDiameters(boolean isAreas) {
+        diameters = new double[nCircles];
+        double area;
+        double maxDiameter = Double.NEGATIVE_INFINITY;
+        for (int j = 0; j < nCircles; j++) {
+            if (isAreas)
+                area = circleData[j] / maxArea;
+            else
+                area = (double) circleData[j] / nTot;
+            diameters[j] = 2. * Math.sqrt(area / Math.PI / nCircles);
+            maxDiameter = Math.max(diameters[j], maxDiameter);
+        }
+        if (maxDiameter > .2) {
+            for (int j = 0; j < nCircles; j++)
+                diameters[j] *= .2 / maxDiameter;
+        }
     }
 
     private void estimatePositions() {
         double stepsize = .01;
-        double lowestStress = 1.;
-        double[][] lowestCenters = new double[nCircles][2];
+        double[][] bestCenters = new double[nCircles][2];
         int worse = 0;
         for (int iter = 0; iter < 500; iter++) {
             recenter();
             renderVenn();
-            computeLoss();
-            if (stress < lowestStress) {
-                lowestStress = stress;
-                copyCenters(lowestCenters);
+            double s = computeLoss();
+            if (s < stress) {
+                stress = s;
+                copyCenters(bestCenters);
                 worse = 0;
             } else {
                 worse++;
@@ -422,10 +441,9 @@ public class VennAnalytic {
             if (stress < minStress || worse > 50)
                 break;
         }
-        stress = lowestStress;
         for (int i = 0; i < nCircles; i++) {
-            centers[i][0] = lowestCenters[i][0];
-            centers[i][1] = lowestCenters[i][1];
+            centers[i][0] = bestCenters[i][0];
+            centers[i][1] = bestCenters[i][1];
         }
         recenter();
         renderVenn();
@@ -440,10 +458,10 @@ public class VennAnalytic {
         }
     }
 
-    private void copyCenters(double[][] lowestCenters) {
+    private void copyCenters(double[][] bestCenters) {
         for (int i = 0; i < nCircles; i++) {
-            lowestCenters[i][0] = centers[i][0];
-            lowestCenters[i][1] = centers[i][1];
+            bestCenters[i][0] = centers[i][0];
+            bestCenters[i][1] = centers[i][1];
         }
     }
 
@@ -467,24 +485,20 @@ public class VennAnalytic {
     private double[][] computeGradients(double stepsize) {
         double[][] gradients = new double[nCircles][2];
         for (int i = 0; i < nPolygons; i++) {
-            String s = Integer.toBinaryString(i);
-            char[] c = s.toCharArray();
-            int offset = nCircles - c.length;
+            char[] c = encode(i);
             for (int j = 0; j < c.length; j++) {
                 if (c[j] == '0')
                     continue;
-                int jo = j + offset;
                 for (int k = j + 1; k < c.length; k++) {
                     if (c[k] == '0')
                         continue;
-                    int ko = k + offset;
                     double resid = polyAreas[i] - polyHats[i];
-                    double dx = resid * stepsize * (centers[jo][0] - centers[ko][0]);
-                    double dy = resid * stepsize * (centers[jo][1] - centers[ko][1]);
-                    gradients[jo][0] += dx;
-                    gradients[jo][1] += dy;
-                    gradients[ko][0] -= dx;
-                    gradients[ko][1] -= dy;
+                    double dx = resid * stepsize * (centers[j][0] - centers[k][0]);
+                    double dy = resid * stepsize * (centers[j][1] - centers[k][1]);
+                    gradients[j][0] += dx;
+                    gradients[j][1] += dy;
+                    gradients[k][0] -= dx;
+                    gradients[k][1] -= dy;
                 }
             }
         }
