@@ -5,7 +5,7 @@ venneuler <- function(combinations, weights, ...) {
     weights <- as.vector(combinations)
     rnm <- rep(rownames(combinations), dim(t)[2])
     cnm <- rep(colnames(combinations), each=dim(t)[1])
-    names(weights) <- paste(rnm, cnm, sep="~")
+    names(weights) <- paste(rnm, cnm, sep="&")
     if (all(weights == 0)) stop("all weights are zero")
     weights <- weights[weights != 0]
     combinations <- names(weights)
@@ -14,9 +14,26 @@ venneuler <- function(combinations, weights, ...) {
     weights <- combinations
     combinations <- names(combinations)
   }
-  if (is.matrix(combinations) && is.character(combinations) && dim(combinations)[2] == 2)
+  if (is.data.frame(combinations)) combinations <- as.matrix(combinations)
+  if (is.matrix(combinations) && (is.numeric(combinations) || is.logical(combinations))) {
+    if (is.null(colnames(combinations))) colnames(combinations) <- LETTERS[seq.int(dim(combinations)[2])]
+    ## aggregate all entries using a hased environment -- we could probably devise a smarter way if we cared ...
+    e <- new.env(TRUE, emptyenv())
+    cn <- colnames(combinations)
+    if (is.logical(combinations)) { for (i in seq.int(dim(combinations)[1])) if (any(combinations[i,])) {
+      ec <- paste(cn[combinations[i,]], collapse='&')
+      e[[ec]] <- if (is.null(e[[ec]])) 1L else (e[[ec]] + 1L)
+    } } else if (is.numeric(combinations)) for (i in seq.int(dim(combinations)[1])) if (any(combinations[i,] != 0)) {
+      ec <- paste(cn[combinations[i,] != 0], collapse='&')
+      e[[ec]] <- (if (is.null(e[[ec]])) 0 else e[[ec]]) + sum(combinations[i,])
+    }
+    en <- ls(e, all.names=TRUE)
+    weights <- as.numeric(unlist(lapply(en, get, e)))
+    combinations <- as.character(en)
+  }
+  if (is.matrix(combinations) && is.character(combinations) && dim(combinations)[2] == 2) {
     vd <- .jnew("edu/uic/ncdm/venn/data/VennData", as.character(combinations[,1]), as.character(combinations[,2]))
-  else {
+  } else {
     if (!is.character(combinations)) stop("combinations must be either a character vector, a table, a named numeric vector or a character matrix with two columns")
     if (missing(weights)) weights <- rep(1, length(combinations))
     vd <- .jnew("edu/uic/ncdm/venn/data/VennData", as.character(combinations), as.double(weights))

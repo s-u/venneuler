@@ -11,10 +11,21 @@ venneuler(combinations, weights, ...)
 }
 \arguments{
   \item{combinations}{
-This can be one of: a character vector (specifies class combinations as class names separated by the tilde \code{~} character), a character matrix of two columns (specifies pairs, all will be equally weighted and weights are ignored) or a named numeric vector (names specify class combinations and values specify weights).
+This can be one of: a character vector (specifies class combinations as
+class names separated by the ampersand \code{\&} character --
+e.g. \code{c("A","B","A&B")}), a named numeric vector (names specify
+class combinations and values specify weights -- e.g. \code{c(A=1, B=2,
+  `A&B`=0.5)}), a character matrix of two columns (specifies pairs, all
+will be equally weighted and the \code{weights} argument is ignored) or
+a logical or numeric matrix whose columns represent sets and
+co-occurrence is defined by non-zero (rep. \code{TRUE}) values in rows
+(weight for a row being 1 for logical matrices or the row sum for
+numeric matrices). For convenience data frames can be passed instead
+of matrices and they will be coerced using \code{as.matrix()}.
 }
   \item{weights}{
-If \code{combinations} is a character vector then this argument specifies the associated weights. It is ignored in all other cases.
+If \code{combinations} is a character vector then this argument
+specifies the associated weights. It is ignored in all other cases.
 }
   \item{\dots}{
 Additional arguments (currently unused).
@@ -41,8 +52,21 @@ An object of the class \code{VennDiagram} with following components:
 %%\seealso{
 %%}
 \examples{
-vd <- venneuler(c(A=0.3, B=0.3, C=1.1, "A~B"=0.1, "A~C"=0.2, "B~C"=0.1 ,"A~B~C"=0.1))
+vd <- venneuler(c(A=0.3, B=0.3, C=1.1, "A&B"=0.1, "A&C"=0.2, "B&C"=0.1 ,"A&B&C"=0.1))
 plot(vd)
+# same as c(A=1, `A&B`=1, `B&C`=1, C=1)
+m <- data.frame(left=c("A","A","B","C"), right=c("A","B","C","C"))
+v <- venneuler(m)
+plot(v)
+m <- as.matrix(data.frame(A=c(1.5, 0.2, 0.4, 0, 0),
+                          B=c(0  , 0.2, 0  , 1, 0),
+                          C=c(0  , 0  , 0.3, 0, 1)))
+# without weights
+v <- venneuler(m > 0)
+plot(v)
+# with weights
+v <- venneuler(m)
+plot(v)
 }
 \keyword{multivariate}
 \keyword{hplot}
