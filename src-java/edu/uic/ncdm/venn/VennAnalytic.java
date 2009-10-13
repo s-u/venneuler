@@ -81,8 +81,9 @@ public class VennAnalytic {
             String s = "";
             for (int j = 0; j < c.length; j++) {
                 if (c[j] == '1')
-                    s += circleLabels[j];
+                    s += (circleLabels[j] + "&");
             }
+            s = s.substring(0, s.length() - 1);
             residualLabels[i - 1] = s;
         }
         // System.out.println("stress = " + stress + ", stress01 = " + stress01 + ", stress05 = " + stress05);
@@ -94,7 +95,7 @@ public class VennAnalytic {
     private void processAreaData(String[][] data, double[] areas) {
         HashMap sets = new HashMap();
         for (int i = 0; i < data.length; i++) {
-            String[] s = data[i][0].split("~");
+            String[] s = data[i][0].split("&");
             for (int j = 0; j < s.length; j++) {
                 if (!sets.containsKey(s[j])) {
                     Double cat = new Double((double) sets.size());
@@ -120,7 +121,7 @@ public class VennAnalytic {
         centers = new double[nCircles][2];
         for (int i = 0; i < nRows; i++) {
             int[] subsets = new int[nCircles];
-            String[] s = data[i][0].split("~");
+            String[] s = data[i][0].split("&");
             for (int j = 0; j < s.length; j++) {
                 int jj = ((Double) sets.get(s[j])).intValue();
                 subsets[jj] = 1;

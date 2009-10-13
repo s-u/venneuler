@@ -15,7 +15,9 @@
 package edu.uic.ncdm.venn.data;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public abstract class FileReader {
     private static Map separators = new LinkedHashMap();
@@ -23,6 +25,8 @@ public abstract class FileReader {
     private static int nCols;
     private static int nRows;
     private static boolean isAreas;
+    private static boolean isBinaryMatrix;
+    private static String[] labels;
 
     public static VennData getData(File fname) {
         String[][] data;
@@ -38,26 +42,38 @@ public abstract class FileReader {
             fin.close();
             nRows--;
 
-            data = new String[nRows][2];
+            data = new String[nRows][nCols];
             areas = new double[nRows];
             fin = new java.io.BufferedReader(new java.io.FileReader(fname));
-            fin.readLine();         //header
+            record = fin.readLine();         //header
+            record = compressBlanks(record);
+            String[] row = split(record);
+            labels = new String[nCols];
+            System.arraycopy(row, 0, labels, 0, nCols);
             for (int i = 0; i < nRows; i++) {
                 record = fin.readLine();
                 if (record == null)
                     break;
                 record = compressBlanks(record);
-                String[] row = split(record);
-                if (i == 0 && row.length == 2)
-                    isAreas = isDouble(row[1]);
+                row = split(record);
+                if (i == 0) {
+                    if (row.length == 2)
+                        isAreas = isDouble(row[1]);
+                    else if (row.length > 2)
+                        isBinaryMatrix = true;
+                }
                 if (isAreas) {
                     data[i][0] = row[0];
                     areas[i] = Double.parseDouble(row[1]);
+                } else if (isBinaryMatrix) {
+                    System.arraycopy(row, 0, data[i], 0, nCols);
                 } else {
                     System.arraycopy(row, 0, data[i], 0, 2);
                 }
             }
             fin.close();
+            if (isBinaryMatrix)
+                data = reformData(data);
             return new VennData(data, areas, isAreas);
 
         } catch (java.io.IOException ie) {
@@ -66,7 +82,29 @@ public abstract class FileReader {
         }
     }
 
-    public static boolean isDouble(String s) {
+    private static String[][] reformData(String[][] data) {
+        ArrayList d = new ArrayList(nRows);
+        for (int i = 0; i < nRows; i++) {
+            for (int j = 0; j < nCols - 1; j++) {
+                data[i][j] = data[i][j].trim();
+                if (data[i][j].equals("1")) {
+                    String[] record = new String[2];
+                    record[0] = labels[j];
+                    record[1] = data[i][nCols - 1];
+                    d.add(record);
+                }
+            }
+        }
+        String[][] result = new String[d.size()][2];
+        for (int i = 0; i < d.size(); i++) {
+            Object[] o = (Object[]) d.get(i);
+            result[i][0] = (String) o[0];
+            result[i][1] = (String) o[1];
+        }
+        return result;
+    }
+
+    private static boolean isDouble(String s) {
         try {
             Double.parseDouble(s);
         } catch (NumberFormatException ex) {
