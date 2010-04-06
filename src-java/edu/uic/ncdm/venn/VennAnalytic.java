@@ -85,9 +85,9 @@ public class VennAnalytic {
             }
             s = s.substring(0, s.length() - 1);
             residualLabels[i - 1] = s;
-            System.out.println(residualLabels[i - 1] + " " + polyAreas[i] + " " + polyData[i]);
+            // System.out.println(residualLabels[i - 1] + " " + polyAreas[i] + " " + polyData[i]);
         }
-        System.out.println("stress = " + stress + ", stress01 = " + stress01 + ", stress05 = " + stress05);
+        // System.out.println("stress = " + stress + ", stress01 = " + stress01 + ", stress05 = " + stress05);
 
         return new VennDiagram(centers, diameters, polyAreas, residuals, circleLabels, residualLabels, colors,
                 stress, stress01, stress05);
