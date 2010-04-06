@@ -442,7 +442,7 @@ public class VennAnalytic {
             recenter();
             stress = computeStress();
             moveCenters(stepsize);
-            System.out.println("iteration, loss " + iter + " " + stress);
+            // System.out.println("iteration, loss " + iter + " " + stress);
             if (stress - lastStress > minStress)
                stepsize = .5 * stepsize;
             else if (stress < minStress || lastStress - stress < minStress)
