@@ -5,6 +5,9 @@
     o	improvements to speed and better solutions in cases where
 	there are large differences in sizes of the circles
 
+    o	Java code has been updated to use generics and thus requires
+	Java 1.5 or higher (use 1.0 series with Java 1.4)
+
 
 1.0-5	2011-05-04
     o	bugfix
