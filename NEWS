@@ -1,6 +1,9 @@
  NEWS/ChangeLog for venneuler
 ------------------------------
 
+1.1-2	2021-10-25
+    o	minor cleanups (no functional difference)
+
 1.1-1	2013-02-19
     o	added more parameters to the plot() function
 
