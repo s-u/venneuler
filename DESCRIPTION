@@ -5,6 +5,6 @@ Author: Lee Wilkinson <leland.wilkinson@gmail.com>
 Maintainer: Simon Urbanek <simon.urbanek@r-project.org>
 Depends: rJava
 Description: Calculates and displays Venn and Euler Diagrams.
-SystemRequirement: Java 1.5 or higher
+SystemRequirements: Java 1.5 or higher
 License: MPL-1.1
 URL: http://www.rforge.net/venneuler/, http://www.cs.uic.edu/~wilkinson/
