@@ -23,9 +23,12 @@ echo "$PNAME version ${VER}"
 #cat DESCRIPTION| sed "s/Version:.*/Version: ${VER}/" > d
 #mv d DESCRIPTION
 
+# checks don't like src-java, use java instead
+mv src-java java
+
 echo "Creating package ..."
 cd ..
-tar fcz ${PNAME}_${VER}.tar.gz ${PNAME}
+R CMD build ${PNAME}
 cd ${SWD}
 cp /tmp/${PNAME}_${VER}.tar.gz ..
 rm -rf /tmp/${PNAME}
