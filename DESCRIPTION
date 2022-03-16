@@ -7,4 +7,4 @@ Depends: rJava
 Description: Calculates and displays Venn and Euler Diagrams.
 SystemRequirements: Java 1.5 or higher
 License: MPL-1.1
-URL: http://www.rforge.net/venneuler/, http://www.cs.uic.edu/~wilkinson/
+URL: https://www.rforge.net/venneuler/, https://www.cs.uic.edu/~wilkinson/
