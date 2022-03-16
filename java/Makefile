@@ -25,8 +25,8 @@ docs: $(SRC)
 	$(JAVADOC) -d $(DOCSDIR) -author -version -breakiterator -link $(JAPIURL) $(SRC)
 
 install: venneuler.jar
-	-mkdir -p ../../inst/java
-	cp venneuler.jar ../../inst/java/venneuler.jar
+	-mkdir -p ../inst/java
+	cp venneuler.jar ../inst/java/venneuler.jar
 
 clean:
 	rm -rf obj edu/uic/ncdm/venn/*.class edu/uic/ncdm/venn/*/*.class venneuler.jar $(DOCSDIR)
