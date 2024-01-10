@@ -7,7 +7,9 @@
   Plots the Venn diagram returned by \code{\link{venneuler}}.
 }
 \usage{
-\method{plot}{VennDiagram}(x, col, col.fn = function(col) hcl(col * 360, 130, 60), alpha = 0.3, main = NULL, edges = 200, border = NA, col.txt = 1, cex = 1, lwd = 1, lty = 1, font = NULL, family = "", ...)
+\method{plot}{VennDiagram}(x, col, col.fn = function(col) hcl(col * 360, 130, 60),
+   alpha = 0.3, main = NULL, edges = 200, border = NA, col.txt = 1,
+   cex = 1, lwd = 1, lty = 1, font = NULL, family = "", \dots)
 }
 \arguments{
   \item{x}{object of the class \code{VennDiagram} as returned from the
